@@ -1,6 +1,6 @@
 users = [
-    {"name": "John Doe", "birthday": "05.07.1985"},
-    {"name": "Jane Smith", "birthday": "07.07.1990"},
+    {"name": "John Doe", "birthday": "15.07.1985"},
+    {"name": "Jane Smith", "birthday": "17.07.1990"},
     {"name": "Mike Black", "birthday": "08.07.1983"},
     {"name": "Anna White", "birthday": "29.05.1986"}
 ]
