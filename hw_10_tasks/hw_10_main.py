@@ -1,10 +1,12 @@
 from hw_06_classes import AddressBook, Record
 from hw_04_users import users
+from hw_10_cli_bot import add_birthday, show_birthday  
 
 
 if __name__ == "__main__":
     # Створення нової адресної книги
     book = AddressBook()
+
 
     # Додавання користувачів із users_data.py
     for user in users:
@@ -57,3 +59,20 @@ if __name__ == "__main__":
             print(f"{b['name']} → {b['congratulation_date']}")
     else:
         print("Немає днів народження на наступному тижні.")
+
+    # Тест функції add_birthday через CLI-функцію
+    print("\n=== Тест функції add_birthday() через CLI-функцію ===")
+    result = add_birthday(["TestUser", "25.12.1990"], book)
+    print("Результат виконання:", result)
+
+    record = book.find("TestUser")
+    if record and record.birthday:
+        print("Дата народження збережена:", record.birthday)
+    else:
+        print("Дата народження не збережена.")
+
+    # Тест функції show_birthday через CLI-функцію
+    print("\n=== Тест функції show_birthday() через CLI-функцію ===")
+    result_show = show_birthday(["TestUser"], book)
+    print("Результат виконання:", result_show)
+
