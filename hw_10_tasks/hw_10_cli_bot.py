@@ -1,20 +1,19 @@
 from hw_06_classes import AddressBook, Record
 from functools import wraps
+from hw_04_birthdays import get_upcoming_birthdays
 
-
-def input_error(func): # Decorator to handle input errors
+def input_error(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except KeyError:
             return "Contact not found."
-        except ValueError as e:
-            return str(e)  
-        except IndexError:
+        except (ValueError, IndexError):
             return "Enter the argument for the command"
     return wrapper
 
-def parse_input(user_input): # Function to parse user input into command and arguments
+def parse_input(user_input):
     parts = user_input.strip().split()
     if not parts:
         return "", []
@@ -22,23 +21,21 @@ def parse_input(user_input): # Function to parse user input into command and arg
     args = parts[1:]
     return cmd, args
 
-
-@input_error # Function to add or update a contact in the address book
+@input_error
 def add_contact(args, book: AddressBook):
-    name, *phones = args
+    if len(args) != 2:
+        raise ValueError
+    name, phone = args
     record = book.find(name)
-    message = "Contact updated."
-    if record is None:
+    if record:
+        record.add_phone(phone)
+    else:
         record = Record(name)
+        record.add_phone(phone)
         book.add_record(record)
-        message = "Contact added."
-    for phone in phones:
-        if phone:
-            record.add_phone(phone)
-    return message
+    return "Contact added."
 
-
-@input_error # Function to change a contact's phone number in the address book
+@input_error
 def change_contact(args, book: AddressBook):
     if len(args) != 2:
         raise ValueError
@@ -53,7 +50,7 @@ def change_contact(args, book: AddressBook):
         record.add_phone(new_phone)
     return "Contact updated."
 
-@input_error # Function to show a contact's phone number
+@input_error
 def show_phone(args, book: AddressBook):
     if len(args) != 1:
         raise IndexError
@@ -66,7 +63,7 @@ def show_phone(args, book: AddressBook):
     phones = "; ".join(phone.value for phone in record.phones)
     return phones
 
-def show_all(book: AddressBook): # Function to show all contacts in the address book 
+def show_all(book: AddressBook):
     if not book.data:
         return "No contacts saved."
     result = []
@@ -75,7 +72,50 @@ def show_all(book: AddressBook): # Function to show all contacts in the address 
         result.append(f"{record.name.value}: {phones}")
     return "\n".join(result)
 
-def main(): # Main function to run the command-line interface bot
+@input_error
+def birthdays(args, book: AddressBook):
+    users = []
+    for record in book.data.values():
+        if record.birthday:
+            users.append({
+                "name": record.name.value,
+                "birthday": record.birthday.value.strftime("%Y.%m.%d")
+            })
+    upcoming = get_upcoming_birthdays(users)
+    if not upcoming:
+        return "No upcoming birthdays this week."
+    return "\n".join(f"{b['name']} → {b['congratulation_date']}" for b in upcoming)
+
+@input_error
+def add_birthday(args, book: AddressBook): #Додати дату народження для вказаного контакту.
+    if len(args) != 2:
+        raise ValueError("Enter name and birthday in format DD.MM.YYYY")
+    
+    name, bday = args
+    record = book.find(name)
+    if not record:
+        record = Record(name)
+        book.add_record(record)
+    record.add_birthday(bday)
+    return f"Birthday added for {name}."
+
+@input_error
+def show_birthday(args, book: AddressBook): #Показати дату народження для вказаного контакту.
+    if len(args) != 1:
+        raise ValueError("Enter the name to show birthday.")
+    
+    name = args[0]
+    record = book.find(name)
+    if not record:
+        raise KeyError("Contact not found.")
+    if not record.birthday:
+        return "Birthday not set for this contact."
+    return f"{name}'s birthday is {record.birthday}"
+
+
+
+
+def main():
     book = AddressBook()
     print("Welcome to the assistant bot!")
 
@@ -96,8 +136,15 @@ def main(): # Main function to run the command-line interface bot
             print(show_phone(args, book))
         elif command == "all":
             print(show_all(book))
+        elif command == "birthdays":
+            print(birthdays(args, book))
+        elif command == "add-birthday":
+            print(add_birthday(args, book))
+        elif command == "show-birthday":
+            print(show_birthday(args, book))
         else:
             print("Invalid command.")
+       
 
 if __name__ == "__main__":
     main()
