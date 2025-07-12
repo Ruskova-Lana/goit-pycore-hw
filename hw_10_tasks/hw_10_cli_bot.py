@@ -1,7 +1,22 @@
+import pickle #added as HW12
+
 from hw_06_classes import AddressBook, Record
 from functools import wraps
 from hw_04_birthdays import get_upcoming_birthdays
 
+# ======= Serialization / Deserialization =======
+def save_data(book, filename="addressbook.pkl"):  #added as HW12
+    with open(filename, "wb") as f:
+        pickle.dump(book, f)
+
+def load_data(filename="addressbook.pkl"): #added as HW12
+    try:
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return AddressBook()
+
+# ======= Decorator =======
 def input_error(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -13,6 +28,7 @@ def input_error(func):
             return "Enter the argument for the command"
     return wrapper
 
+# ======= Parser =======
 def parse_input(user_input):
     parts = user_input.strip().split()
     if not parts:
@@ -21,6 +37,7 @@ def parse_input(user_input):
     args = parts[1:]
     return cmd, args
 
+# ======= Command Handler =======
 @input_error
 def add_contact(args, book: AddressBook):
     if len(args) != 2:
@@ -113,10 +130,9 @@ def show_birthday(args, book: AddressBook): #Показати дату наро�
     return f"{name}'s birthday is {record.birthday}"
 
 
-
-
+# ======= Main Function ======= 
 def main():
-    book = AddressBook()
+    book = load_data()  # added as HW12 - Load existing data or create a new AddressBook instance 
     print("Welcome to the assistant bot!")
 
     while True:
@@ -124,6 +140,7 @@ def main():
         command, args = parse_input(user_input)
 
         if command in ["exit", "close"]:
+            save_data(book) # added as HW12 - Save data before exiting
             print("Good bye!")
             break
         elif command == "hello":
